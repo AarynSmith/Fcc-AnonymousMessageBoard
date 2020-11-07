@@ -1,17 +1,17 @@
-/*
-*
-*
-*       Complete the API routing below
-*
-*
-*/
-
 'use strict';
 
-var expect = require('chai').expect;
+
+const databaseHandler = require('../controllers/databaseHandler');
+const db = new databaseHandler();
 
 module.exports = function(app) {
-  app.route('/api/threads/:board');
+  app.route('/api/threads/:board')
+    .post(async (req, res) => {
+      const dbRes = await db.createThread(req.params.board, req.body);
+      if (dbRes.err) return res.status(500).send('Server Error: ' + db.err)
+      res.redirect(`/b/${req.params.board}`);
+    })
+
   app.route('/api/replies/:board');
 
 };

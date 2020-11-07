@@ -1,11 +1,3 @@
-/*
-*
-*
-*       FILL IN EACH FUNCTIONAL TEST BELOW COMPLETELY
-*       -----[Keep the tests in the same order!]-----
-*       (if additional are added, keep them at the very end!)
-*/
-
 var chaiHttp = require('chai-http');
 var chai = require('chai');
 var assert = chai.assert;
@@ -20,6 +12,20 @@ suite('Functional Tests', function() {
   suite('API ROUTING FOR /api/threads/:board', function() {
 
     suite('POST', function() {
+      test(`Posting To ${ThreadsPath} test to create a new thread`, function(done) {
+        chai.request(server)
+          .post(ThreadsPath + 'test')
+          .send({
+            text: 'Test Thread 1',
+            delete_password: 'testPasswd',
+          })
+          .redirects(0)
+          .end((err, res) => {
+            if (err) console.log(err.text);
+            assert.equal(res.status, 302);
+            done()
+          })
+      });
     });
 
     suite('GET', function() {
