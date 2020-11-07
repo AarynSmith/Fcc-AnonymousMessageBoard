@@ -35,7 +35,6 @@ module.exports = function() {
       const doc = await threadDoc.save();
       return {doc};
     } catch (err) {
-      console.log("err", err)
       return {err};
     }
   }

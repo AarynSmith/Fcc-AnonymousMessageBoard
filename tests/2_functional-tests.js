@@ -21,7 +21,6 @@ suite('Functional Tests', function() {
           })
           .redirects(0)
           .end((err, res) => {
-            if (err) console.log(err.text);
             assert.equal(res.status, 302);
             done()
           })
