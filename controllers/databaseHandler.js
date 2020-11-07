@@ -27,15 +27,39 @@ const Thread = mongoose.model('thread', threadSchema);
 
 module.exports = function() {
   this.createThread = async (board, thread) => {
-    const threadDoc = new Thread({
-      board,
-      ...thread,
-    })
+    const threadDoc = new Thread({board, ...thread})
     try {
       const doc = await threadDoc.save();
       return {doc};
     } catch (err) {
       return {err};
     }
+  }
+  this.addReply = async (reply) => {
+    const threadDoc = Thread.findByIdAndUpdate(reply.thread_id,
+      {
+        $inc: {reply_count: 1},
+        $push: {
+          replies: {
+            text: reply.text,
+            delete_password: reply.delete_password
+          }
+        }
+      },
+      {new: true},
+    );
+    try {
+      const doc = await threadDoc.exec();
+      return {doc};
+    } catch (err) {
+      return {err};
+    }
+  }
+
+  this.testDeleteBoard = (board) => {
+    Thread.deleteMany({board}, (err, data) => {
+      console.log(data)
+      return data;
+    })
   }
 }
