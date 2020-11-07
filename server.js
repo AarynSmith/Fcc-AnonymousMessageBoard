@@ -11,6 +11,7 @@ var runner = require('./test-runner');
 
 var app = express();
 app.use(helmet({
+  contentSecurityPolicy: false,
   frameguard: {
     action: "sameorigin"
   },
