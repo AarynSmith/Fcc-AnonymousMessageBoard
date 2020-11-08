@@ -17,22 +17,22 @@ suite('Functional Tests', function() {
   })
 
   suite('API ROUTING FOR /api/threads/:board', function() {
-    let ThreadID = ""
     suite('POST', function() {
       test(`Posting To ${ThreadsPath}board to create a new thread`,
         function(done) {
-        chai.request(server)
-          .post(ThreadsPath + TestBoard)
-          .send({
-            text: 'Threads Test Thread',
-            delete_password: 'testPasswd',
-          })
-          .redirects(0)
-            .end((_, res) => {
-            assert.equal(res.status, 302);
-            done()
-          })
-      });
+          chai.request(server)
+            .post(ThreadsPath + TestBoard)
+            .send({
+              text: 'Threads Test Thread',
+              delete_password: 'testPasswd',
+            })
+            .redirects(0)
+            .end((_err, res) => {
+              assert.equal(res.status, 302);
+              assert.equal(res.header.location, `/b/${TestBoard}/`);
+              done()
+            })
+        });
     });
 
     suite('GET', function() {
@@ -55,7 +55,7 @@ suite('Functional Tests', function() {
           })
         }
 
-    });
+      });
 
       test(`Getting To ${ThreadsPath}board to get list of threads`,
         function(done) {
@@ -121,8 +121,9 @@ suite('Functional Tests', function() {
             delete_password: 'testPasswd',
           })
           .redirects(0)
-          .end((err, res) => {
+          .end((_err, res) => {
             assert.equal(res.status, 302);
+            assert.equal(res.header.location, `/b/${TestBoard}/${threadInfo.doc._id}/`);
             done()
           })
       });
@@ -133,7 +134,7 @@ suite('Functional Tests', function() {
           chai.request(server)
             .get(RepliesPath + TestBoard)
             .query({thread_id: threadInfo.doc._id.toString()})
-            .end((err, res) => {
+            .end((_err, res) => {
               const thread = res.body
               assert.property(thread, 'text')
               assert.property(thread, 'created_on')

@@ -9,7 +9,7 @@ module.exports = function(app) {
     .post(async (req, res) => {
       const dbRes = await db.createThread(req.params.board, req.body);
       if (dbRes.err) return res.status(500).send('Server Error: ' + db.err)
-      res.redirect(`/b/${req.params.board}`);
+      res.redirect(`/b/${req.params.board}/`);
     })
     .get(async (req, res) => {
       const dbRes = await db.getThreads(req.params.board);
@@ -21,6 +21,7 @@ module.exports = function(app) {
     .post(async (req, res) => {
       const dbRes = await db.addReply(req.body)
       if (dbRes.err) return res.status(500).send('Server Error: ' + db.err)
+      res.redirect(`/b/${req.params.board}/${req.body.thread_id}/`);
     })
     .get(async (req, res) => {
       const dbRes = await db.getReplies(req.params.board, req.query.thread_id)
