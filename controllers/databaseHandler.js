@@ -23,6 +23,13 @@ const threadSchema = new mongoose.Schema({
   }]
 })
 
+const threadProjection = {
+  reported: 0,
+  delete_password: 0,
+  'replies.reported': 0,
+  'replies.delete_password': 0,
+};
+
 const Thread = mongoose.model('thread', threadSchema);
 
 module.exports = function() {
@@ -59,18 +66,26 @@ module.exports = function() {
   }
 
   this.getThreads = async (board) => {
-    const threads = Thread.find({board}, {
-      reported: 0,
-      delete_password: 0,
-      'replies.reported': 0,
-      'replies.delete_password': 0,
-    }).sort({bumped_on: 'desc'}).limit(10)
+    const threads = Thread.find({board}, threadProjection)
+      .sort({bumped_on: 'desc'})
+      .limit(10)
       .where('replies').slice(-3)
     try {
       const list = await threads.exec();
       return list;
     } catch (err) {
       return {err};
+    }
+  }
+
+  this.getReplies = async (board, thread) => {
+    const threadQuery = Thread.findById(thread, threadProjection)
+    try {
+      const doc = await threadQuery.exec();
+      return doc
+    } catch (err) {
+      console.log("err", err)
+      return {err}
     }
   }
 

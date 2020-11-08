@@ -102,26 +102,57 @@ suite('Functional Tests', function() {
         text: 'Replies test thread',
         delete_password: 'testPasswd',
       })
+      for (let i = 0; i < 5; i++) {
+        db.addReply({
+          thread_id: threadInfo.doc._id,
+          text: `Reply ${i}`,
+          delete_password: 'testPasswd',
+        })
+      }
     });
+
     suite('POST', function() {
       test(`Posting To ${RepliesPath}board to create a reply to a thread`, function(done) {
         chai.request(server)
           .post(RepliesPath + TestBoard)
           .send({
             thread_id: threadInfo.doc._id,
-            text: 'Reply 1',
+            text: 'Post Test Reply',
             delete_password: 'testPasswd',
           })
           .redirects(0)
           .end((err, res) => {
-            // if (res.status === 500) console.log(err)
             assert.equal(res.status, 302);
             done()
           })
       });
     });
     suite('GET', function() {
-
+      test(`Getting To ${RepliesPath}board?thread_id=ID to get list of replies`,
+        function(done) {
+          chai.request(server)
+            .get(RepliesPath + TestBoard)
+            .query({thread_id: threadInfo.doc._id.toString()})
+            .end((err, res) => {
+              const thread = res.body
+              assert.property(thread, 'text')
+              assert.property(thread, 'created_on')
+              assert.property(thread, 'bumped_on')
+              assert.notProperty(thread, 'reported')
+              assert.notProperty(thread, 'delete_password')
+              assert.property(thread, 'reply_count')
+              assert.property(thread, 'replies')
+              assert.isArray(thread.replies)
+              assert.equal(thread.replies.length, 6)
+              thread.replies.forEach(reply => {
+                assert.property(reply, 'text')
+                assert.property(reply, 'created_on')
+                assert.notProperty(reply, 'reported')
+                assert.notProperty(reply, 'delete_password')
+              });
+              done();
+            })
+        });
     });
 
     suite('PUT', function() {
