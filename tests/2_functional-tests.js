@@ -12,10 +12,15 @@ const RepliesPath = '/api/replies/';
 chai.use(chaiHttp);
 
 suite('Functional Tests', function() {
+  suiteTeardown(() => {
+    db.testDeleteBoard(TestBoard);
+  })
+
   suite('API ROUTING FOR /api/threads/:board', function() {
     let ThreadID = ""
     suite('POST', function() {
-      test(`Posting To ${ThreadsPath}board to create a new thread`, function(done) {
+      test(`Posting To ${ThreadsPath}board to create a new thread`,
+        function(done) {
         chai.request(server)
           .post(ThreadsPath + TestBoard)
           .send({
@@ -23,7 +28,7 @@ suite('Functional Tests', function() {
             delete_password: 'testPasswd',
           })
           .redirects(0)
-          .end((err, res) => {
+            .end((_, res) => {
             assert.equal(res.status, 302);
             done()
           })
@@ -31,7 +36,54 @@ suite('Functional Tests', function() {
     });
 
     suite('GET', function() {
+      suiteSetup(async () => {
+        threadInfo = await db.createThread(TestBoard, {
+          text: 'Get Thread test thread',
+          delete_password: 'testPasswd',
+        })
+        for (let i = 0; i < 12; i++) {
+          db.createThread(TestBoard, {
+            text: `Get Thread test thread ${i}`,
+            delete_password: 'testPasswd',
+          })
+        }
+        for (let i = 0; i < 5; i++) {
+          db.addReply({
+            thread_id: threadInfo.doc._id,
+            text: `Reply ${i}`,
+            delete_password: 'testPasswd',
+          })
+        }
 
+    });
+
+      test(`Getting To ${ThreadsPath}board to get list of threads`,
+        function(done) {
+          chai.request(server)
+            .get(ThreadsPath + TestBoard)
+            .end((err, res) => {
+              assert.isArray(res.body);
+              assert.isAtMost(res.body.length, 10);
+              res.body.forEach(thread => {
+                assert.property(thread, 'text')
+                assert.property(thread, 'created_on')
+                assert.property(thread, 'bumped_on')
+                assert.notProperty(thread, 'reported')
+                assert.notProperty(thread, 'delete_password')
+                assert.property(thread, 'reply_count')
+                assert.property(thread, 'replies')
+                assert.isArray(thread.replies)
+                assert.isAtMost(thread.replies.length, 3)
+                thread.replies.forEach(reply => {
+                  assert.property(reply, 'text')
+                  assert.property(reply, 'created_on')
+                  assert.notProperty(reply, 'reported')
+                  assert.notProperty(reply, 'delete_password')
+                });
+              })
+              done();
+            })
+        });
     });
 
     suite('DELETE', function() {

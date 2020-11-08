@@ -35,9 +35,11 @@ module.exports = function() {
       return {err};
     }
   }
+
   this.addReply = async (reply) => {
     const threadDoc = Thread.findByIdAndUpdate(reply.thread_id,
       {
+        $set: {bumped_on: Date.now()},
         $inc: {reply_count: 1},
         $push: {
           replies: {
@@ -56,9 +58,25 @@ module.exports = function() {
     }
   }
 
+  this.getThreads = async (board) => {
+    const threads = Thread.find({board}, {
+      reported: 0,
+      delete_password: 0,
+      'replies.reported': 0,
+      'replies.delete_password': 0,
+    }).sort({bumped_on: 'desc'}).limit(10)
+      .where('replies').slice(-3)
+    try {
+      const list = await threads.exec();
+      return list;
+    } catch (err) {
+      return {err};
+    }
+  }
+
   this.testDeleteBoard = (board) => {
     Thread.deleteMany({board}, (err, data) => {
-      console.log(data)
+      console.log(`Deleted ${data.deletedCount} threads from ${board}`)
       return data;
     })
   }
