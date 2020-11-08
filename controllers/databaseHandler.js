@@ -1,3 +1,4 @@
+const {ObjectId} = require('mongodb');
 const mongoose = require('mongoose');
 const CONNECTION_STRING = process.env.DB;
 
@@ -78,13 +79,26 @@ module.exports = function() {
     }
   }
 
+  this.deleteThread = async (board, thread) => {
+    const threadQuery = Thread.findOneAndDelete({
+      board,
+      _id: ObjectId(thread.thread_id),
+      delete_password: thread.delete_password,
+    })
+    try {
+      const res = await threadQuery.exec();
+      return {res}
+    } catch (err) {
+      return {err};
+    }
+  }
+
   this.getReplies = async (board, thread) => {
     const threadQuery = Thread.findById(thread, threadProjection)
     try {
       const doc = await threadQuery.exec();
       return doc
     } catch (err) {
-      console.log("err", err)
       return {err}
     }
   }

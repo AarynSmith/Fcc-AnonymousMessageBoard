@@ -12,10 +12,7 @@ const RepliesPath = '/api/replies/';
 chai.use(chaiHttp);
 
 suite('Functional Tests', function() {
-  suiteTeardown(() => {
-    db.testDeleteBoard(TestBoard);
-  })
-
+  suiteTeardown(() => db.testDeleteBoard(TestBoard))
   suite('API ROUTING FOR /api/threads/:board', function() {
     suite('POST', function() {
       test(`Posting To ${ThreadsPath}board to create a new thread`,
@@ -34,7 +31,6 @@ suite('Functional Tests', function() {
             })
         });
     });
-
     suite('GET', function() {
       suiteSetup(async () => {
         threadInfo = await db.createThread(TestBoard, {
@@ -85,14 +81,42 @@ suite('Functional Tests', function() {
             })
         });
     });
-
     suite('DELETE', function() {
-
+      suiteSetup(async () => {
+        threadInfo = await db.createThread(TestBoard, {
+          text: 'Delete Thread test thread',
+          delete_password: 'testPasswd',
+        });
+      });
+      // I can delete a thread completely if I send a DELETE request to /api/threads/{board} and pass along the thread_id & delete_password. (Text response will be 'incorrect password' or 'success')
+      test('Incorrect password', (done) => {
+        chai.request(server)
+          .delete(ThreadsPath + TestBoard)
+          .send({
+            thread_id: threadInfo.doc._id,
+            delete_password: 'incorrect Password',
+          }).end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'incorrect password');
+            done()
+          })
+      });
+      test('Correct password', (done) => {
+        chai.request(server)
+          .delete(ThreadsPath + TestBoard)
+          .send({
+            thread_id: threadInfo.doc._id,
+            delete_password: threadInfo.doc.delete_password,
+          }).end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'success');
+            done();
+          })
+      });
     });
+  });
+  suite('PUT', function() {
 
-    suite('PUT', function() {
-
-    });
   });
 
   suite('API ROUTING FOR /api/replies/:board', function() {
@@ -110,7 +134,6 @@ suite('Functional Tests', function() {
         })
       }
     });
-
     suite('POST', function() {
       test(`Posting To ${RepliesPath}board to create a reply to a thread`, function(done) {
         chai.request(server)
@@ -155,17 +178,9 @@ suite('Functional Tests', function() {
             })
         });
     });
-
     suite('PUT', function() {
-
     });
-
     suite('DELETE', function() {
-
     });
-
   });
-
-
 });
-
