@@ -73,6 +73,18 @@ module.exports = function() {
   }
 
   this.reportThread = async (board, thread) => { // PUT
+    const threadQuery = Thread.findOneAndUpdate({
+      board,
+      _id: ObjectId(thread.thread_id)
+    }, {
+      $set: {reported: true}
+    }, {new: true})
+    try {
+      doc = await threadQuery.exec();
+      return {doc}
+    } catch (err) {
+      return {err}
+    }
   }
 
   // Replies Functions

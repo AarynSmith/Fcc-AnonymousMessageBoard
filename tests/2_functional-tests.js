@@ -50,9 +50,7 @@ suite('Functional Tests', function() {
             delete_password: 'testPasswd',
           })
         }
-
       });
-
       test(`Getting To ${ThreadsPath}board to get list of threads`,
         function(done) {
           chai.request(server)
@@ -114,6 +112,24 @@ suite('Functional Tests', function() {
       });
     });
     suite('PUT', function() {
+      let threadInfo;
+      suiteSetup(async () => {
+        threadInfo = await db.createThread(TestBoard, {
+          text: 'Get Thread test thread',
+          delete_password: 'testPasswd',
+        })
+      });
+      // I can report a thread and change it's reported value to true by sending a PUT request to /api/threads/{board} and pass along the thread_id. (Text response will be 'success')
+      test(`Putting To ${ThreadsPath}board to report a thread`, (done) => {
+        chai.request(server)
+          .put(ThreadsPath + TestBoard)
+          .send({thread_id: threadInfo.doc._id})
+          .end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'success')
+            done();
+          })
+      })
     });
   });
   suite('API ROUTING FOR /api/replies/:board', function() {
@@ -220,6 +236,7 @@ suite('Functional Tests', function() {
       });
     });
     suite('PUT', function() {
+      // I can report a reply and change it's reported value to true by sending a PUT request to /api/replies/{board} and pass along the thread_id & reply_id. (Text response will be 'success')
     });
   });
 });
