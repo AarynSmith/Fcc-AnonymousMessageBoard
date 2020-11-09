@@ -1,6 +1,5 @@
 'use strict';
 
-
 const databaseHandler = require('../controllers/databaseHandler');
 const db = new databaseHandler();
 
@@ -44,5 +43,10 @@ module.exports = function(app) {
       if (dbRes.err) return res.status(500).send('Server Error: ' + db.err);
       if (dbRes.doc) return res.send('success');
       res.send('incorrect password');
+    })
+    .put(async (req, res) => {
+      const dbRes = await db.reportReply(req.params.board, req.body);
+      if (dbRes.err) return res.status(500).send('Server Error: ' + db.err);
+      res.send('success');
     })
 };

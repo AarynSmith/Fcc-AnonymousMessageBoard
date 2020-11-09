@@ -119,7 +119,6 @@ suite('Functional Tests', function() {
           delete_password: 'testPasswd',
         })
       });
-      // I can report a thread and change it's reported value to true by sending a PUT request to /api/threads/{board} and pass along the thread_id. (Text response will be 'success')
       test(`Putting To ${ThreadsPath}board to report a thread`, (done) => {
         chai.request(server)
           .put(ThreadsPath + TestBoard)
@@ -236,7 +235,34 @@ suite('Functional Tests', function() {
       });
     });
     suite('PUT', function() {
-      // I can report a reply and change it's reported value to true by sending a PUT request to /api/replies/{board} and pass along the thread_id & reply_id. (Text response will be 'success')
+      let threadInfo;
+      let replyInfo;
+      suiteSetup(async () => {
+        threadInfo = await db.createThread(TestBoard, {
+          text: 'Put Reply test thread',
+          delete_password: 'testPasswd',
+        });
+        for (let i = 0; i < 5; i++) {
+          const reply = await db.addReply({
+            thread_id: threadInfo.doc._id,
+            text: `Reply ${i}`,
+            delete_password: `testPasswd ${i}`,
+          })
+          if (i === 2) replyInfo = reply;
+        }
+      });
+      test(`Putting to ${RepliesPath}board to report a reply`, (done) => {
+        chai.request(server)
+          .put(RepliesPath + TestBoard)
+          .send({
+            thread_id: threadInfo.doc._id,
+            reply_id: replyInfo.doc.replies[0]._id,
+          }).end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'success');
+            done()
+          })
+      });
     });
   });
 });

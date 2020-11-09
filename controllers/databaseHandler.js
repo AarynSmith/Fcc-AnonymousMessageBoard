@@ -145,6 +145,25 @@ module.exports = function() {
   }
 
   this.reportReply = async (board, reply) => { // PUT
+    const replyQuery = Thread.findOneAndUpdate(
+      {
+        board,
+        "_id": reply.thread_id,
+        "replies._id": reply.reply_id,
+      },
+      {
+        "$set": {
+          "replies.$.reported": true
+        }
+      }, {
+      new: true,
+    })
+    try {
+      const doc = await replyQuery.exec();
+      return {doc}
+    } catch (err) {
+      return {err}
+    }
   }
 
   // Test Functions
