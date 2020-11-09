@@ -34,4 +34,10 @@ module.exports = function(app) {
       if (dbRes.err) return res.status(500).send('Server Error: ' + db.err)
       res.json(dbRes);
     })
+    .delete(async (req, res) => {
+      const dbRes = await db.deleteReply(req.params.board, req.body);
+      if (dbRes.err) return res.status(500).send('Server Error: ' + db.err);
+      if (dbRes.doc) return res.send('success');
+      res.send('incorrect password');
+    })
 };

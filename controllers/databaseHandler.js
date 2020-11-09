@@ -34,7 +34,8 @@ const threadProjection = {
 const Thread = mongoose.model('thread', threadSchema);
 
 module.exports = function() {
-  this.createThread = async (board, thread) => {
+  // Threads Functions
+  this.createThread = async (board, thread) => { // POST
     const threadDoc = new Thread({board, ...thread})
     try {
       const doc = await threadDoc.save();
@@ -44,7 +45,38 @@ module.exports = function() {
     }
   }
 
-  this.addReply = async (reply) => {
+  this.getThreads = async (board) => { // GET
+    const threads = Thread.find({board}, threadProjection)
+      .sort({bumped_on: 'desc'})
+      .limit(10)
+      .where('replies').slice(-3)
+    try {
+      const list = await threads.exec();
+      return list;
+    } catch (err) {
+      return {err};
+    }
+  }
+
+  this.deleteThread = async (board, thread) => { // DELETE
+    const threadQuery = Thread.findOneAndDelete({
+      board,
+      _id: ObjectId(thread.thread_id),
+      delete_password: thread.delete_password,
+    })
+    try {
+      const res = await threadQuery.exec();
+      return {res}
+    } catch (err) {
+      return {err};
+    }
+  }
+
+  this.reportThread = async (board, thread) => { // PUT
+  }
+
+  // Replies Functions
+  this.addReply = async (reply) => { // POST
     const threadDoc = Thread.findByIdAndUpdate(reply.thread_id,
       {
         $set: {bumped_on: Date.now()},
@@ -60,40 +92,14 @@ module.exports = function() {
     );
     try {
       const doc = await threadDoc.exec();
+      doc.replies = doc.replies.slice(-1);
       return {doc};
     } catch (err) {
       return {err};
     }
   }
 
-  this.getThreads = async (board) => {
-    const threads = Thread.find({board}, threadProjection)
-      .sort({bumped_on: 'desc'})
-      .limit(10)
-      .where('replies').slice(-3)
-    try {
-      const list = await threads.exec();
-      return list;
-    } catch (err) {
-      return {err};
-    }
-  }
-
-  this.deleteThread = async (board, thread) => {
-    const threadQuery = Thread.findOneAndDelete({
-      board,
-      _id: ObjectId(thread.thread_id),
-      delete_password: thread.delete_password,
-    })
-    try {
-      const res = await threadQuery.exec();
-      return {res}
-    } catch (err) {
-      return {err};
-    }
-  }
-
-  this.getReplies = async (board, thread) => {
+  this.getReplies = async (board, thread) => { // GET
     const threadQuery = Thread.findById(thread, threadProjection)
     try {
       const doc = await threadQuery.exec();
@@ -103,6 +109,33 @@ module.exports = function() {
     }
   }
 
+  this.deleteReply = async (board, reply) => { // DELETE
+    const replyQuery = Thread.findOneAndUpdate(
+      {
+        board,
+        "_id": reply.thread_id,
+        "replies._id": reply.reply_id,
+        "replies.delete_password": reply.delete_password,
+      },
+      {
+        "$set": {
+          "replies.$.text": "[deleted]"
+        }
+      }, {
+      new: true,
+    })
+    try {
+      const doc = await replyQuery.exec();
+      return {doc}
+    } catch (err) {
+      return {err}
+    }
+  }
+
+  this.reportReply = async (board, reply) => { // PUT
+  }
+
+  // Test Functions
   this.testDeleteBoard = (board) => {
     Thread.deleteMany({board}, (err, data) => {
       console.log(`Deleted ${data.deletedCount} threads from ${board}`)

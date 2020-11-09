@@ -44,7 +44,8 @@
       <li><input type="checkbox" checked>I can delete a thread completely if I send a <b>DELETE</b> request to
         <i>/api/threads/{board}</i> and pass along the <code>thread_id</code> &amp; <code>delete_password</code>. (Text
         response will be 'incorrect password' or 'success')</li>
-      <li><input type="checkbox">I can delete a post(just changing the text to '[deleted]') if I send a <b>DELETE</b>
+      <li><input type="checkbox" checked>I can delete a post(just changing the text to '[deleted]') if I send a
+        <b>DELETE</b>
         request to <i>/api/replies/{board}</i> and pass along the <code>thread_id</code>, <code>reply_id</code>, &amp;
         <code>delete_password</code>. (Text response will be 'incorrect password' or 'success')</li>
       <li><input type="checkbox">I can report a thread and change it's reported value to true by sending a <b>PUT</b>

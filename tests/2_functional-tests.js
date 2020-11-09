@@ -88,7 +88,6 @@ suite('Functional Tests', function() {
           delete_password: 'testPasswd',
         });
       });
-      // I can delete a thread completely if I send a DELETE request to /api/threads/{board} and pass along the thread_id & delete_password. (Text response will be 'incorrect password' or 'success')
       test('Incorrect password', (done) => {
         chai.request(server)
           .delete(ThreadsPath + TestBoard)
@@ -114,11 +113,9 @@ suite('Functional Tests', function() {
           })
       });
     });
+    suite('PUT', function() {
+    });
   });
-  suite('PUT', function() {
-
-  });
-
   suite('API ROUTING FOR /api/replies/:board', function() {
     let threadInfo;
     suiteSetup(async () => {
@@ -178,9 +175,51 @@ suite('Functional Tests', function() {
             })
         });
     });
-    suite('PUT', function() {
-    });
     suite('DELETE', function() {
+      let threadInfo;
+      let replyInfo;
+      suiteSetup(async () => {
+        threadInfo = await db.createThread(TestBoard, {
+          text: 'Delete Reply test thread',
+          delete_password: 'testPasswd',
+        });
+        for (let i = 0; i < 5; i++) {
+          const reply = await db.addReply({
+            thread_id: threadInfo.doc._id,
+            text: `Reply ${i}`,
+            delete_password: `testPasswd ${i}`,
+          })
+          if (i === 2) replyInfo = reply;
+        }
+      });
+      test('Incorrect password', (done) => {
+        chai.request(server)
+          .delete(RepliesPath + TestBoard)
+          .send({
+            thread_id: threadInfo.doc._id,
+            reply_id: replyInfo.doc.replies[0]._id,
+            delete_password: 'incorrect password'
+          }).end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'incorrect password');
+            done()
+          })
+      });
+      test('Correct password', (done) => {
+        chai.request(server)
+          .delete(RepliesPath + TestBoard)
+          .send({
+            thread_id: threadInfo.doc._id,
+            reply_id: replyInfo.doc.replies[0]._id,
+            delete_password: replyInfo.doc.replies[0].delete_password
+          }).end((_err, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'success');
+            done()
+          })
+      });
+    });
+    suite('PUT', function() {
     });
   });
 });
